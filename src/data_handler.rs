@@ -1,23 +1,26 @@
+use crate::create_point_request_dto::CreatePointRequestDTO;
 use crate::create_user_request_dto::CreateUserRequestDTO;
 use crate::credentials::Credentials;
+use crate::point::Point;
 use crate::user::User;
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
 use std::sync::Mutex;
 
 #[derive(Debug)]
-pub struct InMemoryDataSource {
+pub struct InMemoryDataHandler {
   pub users: Mutex<Vec<User>>,
+  pub points: Mutex<Vec<Point>>,
 }
 
-impl InMemoryDataSource {
-  pub fn new() -> InMemoryDataSource {
-    InMemoryDataSource {
+impl InMemoryDataHandler {
+  pub fn new() -> InMemoryDataHandler {
+    InMemoryDataHandler {
       users: Mutex::new(Vec::new()),
+      points: Mutex::new(Vec::new()),
     }
   }
 
-  // cls; curl -v -X POST http://localhost:3000/register -H "Content-Type: application/json" -d '{ "name": "lucas", "plain_password": "1234567890", "email": "admin@system.com", "is_admin": true }'
   pub fn create_user(
     &self,
     dto: CreateUserRequestDTO,
@@ -41,7 +44,6 @@ impl InMemoryDataSource {
     (StatusCode::CREATED, "User created")
   }
 
-  // cls; curl -v -X POST http://localhost:3000/login -H "Content-Type: application/json" -d '{ "email": "admin@system.com", "plain_password": "1234567890" }'
   pub fn login_user(&self, credentials: Credentials) -> impl IntoResponse {
     let mut local_users = self.users.lock().unwrap();
     let mut found_user = local_users.iter().find(|u| u.email == credentials.email);
@@ -56,5 +58,16 @@ impl InMemoryDataSource {
         (StatusCode::OK, "User logged in! JWT: eySODFJ98ehfauiehfPIHEfhyh")
       }
     }
+  }
+
+  // TODO: should be under an authenticated middleware
+  pub fn create_point(&self, dto: CreatePointRequestDTO) -> impl IntoResponse {
+    let mut local_points = self.points.lock().unwrap();
+    let next_id = local_points.len() + 1;
+    local_points.push(Point::new(next_id, dto.related_user_id, dto.instant));
+
+    println!("{:?}", local_points);
+
+    (StatusCode::CREATED, "Point created")
   }
 }
