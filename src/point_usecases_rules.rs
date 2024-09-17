@@ -3,7 +3,7 @@ use chrono::{DateTime, Local, TimeDelta};
 pub fn is_within_time_range(check: DateTime<Local>) -> bool {
   let now = Local::now();
   let lower_bound = now - TimeDelta::seconds(10);
-  let higher_bound = now - TimeDelta::seconds(1);
+  let higher_bound = now + TimeDelta::seconds(1);
   check >= lower_bound && check <= higher_bound
 }
 
