@@ -29,7 +29,7 @@ impl InMemoryDataHandler {
   ) -> impl IntoResponse {
     let mut local_users = self.users.lock().unwrap();
 
-    if local_users.iter().any(|u: &User| { return (u.email == dto.email); }) {
+    if local_users.iter().any(|u| { u.email == dto.email }) {
       return (StatusCode::BAD_REQUEST, "User email already exists");
     }
 
@@ -68,8 +68,10 @@ impl InMemoryDataHandler {
     }
   }
 
-  // TODO: should be under an authenticated middleware
-  pub fn create_point(&self, dto: CreatePointRequestDTO) -> impl IntoResponse {
+  pub fn create_point(&self, dto: CreatePointRequestDTO, jwt: String) -> impl IntoResponse {
+    // TODO: early check if jwt contains same ID claim as dto related_user_id,
+    // TODO: otherwise, return UNAUTHORIZED
+
     let mut local_points = self.points.lock().unwrap();
     let next_id = local_points.len() + 1;
     local_points.push(Point::new(next_id, dto.related_user_id, dto.instant));

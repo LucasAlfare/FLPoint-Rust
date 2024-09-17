@@ -1,3 +1,17 @@
+// mod jwt_generator;
+//
+// use jwt_generator::generate_jwt;
+// use jwt_generator::JwtClaims;
+//
+// fn main() {
+//   let c = JwtClaims {
+//     user_id: "hehe".to_string(),
+//     is_admin: true,
+//   };
+//
+//   println!("{}", generate_jwt(c));
+// }
+
 mod credentials;
 mod user;
 mod create_user_request_dto;
@@ -5,6 +19,7 @@ mod data_handler;
 mod point;
 mod create_point_request_dto;
 mod jwt_generator;
+mod point_usecases_rules;
 
 use crate::create_point_request_dto::CreatePointRequestDTO;
 use crate::create_user_request_dto::CreateUserRequestDTO;
@@ -14,6 +29,9 @@ use axum::extract::State;
 use axum::response::IntoResponse;
 use axum::routing::{get, post};
 use axum::{Json, Router};
+use axum_extra::headers::authorization::Bearer;
+use axum_extra::headers::Authorization;
+use axum_extra::TypedHeader;
 use chrono::{Offset, TimeZone, Timelike};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
@@ -49,10 +67,15 @@ async fn login(
   handler.login_user(credentials)
 }
 
-// cls; curl -v -X POST http://localhost:3000/point -H "Content-Type: application/json" -d '{"related_user_id": 1, instant: "2024-09-16T20:37:11.163961900-03:00"}'
+// cls; curl -v -X POST http://localhost:3000/point -H "Content-Type: application/json" -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoiaGVoZSIsImlzX2FkbWluIjp0cnVlfQ.gbmckDBzg1FDtkNDvZpKIs8jsSxWdwNrZUm7wcZVT_E" -d '{"related_user_id": 1, "instant": "2024-09-16T20:37:11.163961900-03:00"}'
 async fn point(
   State(handler): State<Arc<InMemoryDataHandler>>,
+  TypedHeader(Authorization(jwt)): TypedHeader<Authorization<Bearer>>,
   Json(dto): Json<CreatePointRequestDTO>,
 ) -> impl IntoResponse {
-  handler.create_point(dto)
+  let received_jwt = jwt.token().to_string();
+
+  println!("{:#?}", received_jwt);
+
+  handler.create_point(dto, received_jwt)
 }
