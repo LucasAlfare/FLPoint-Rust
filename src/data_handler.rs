@@ -1,6 +1,7 @@
 use crate::create_point_request_dto::CreatePointRequestDTO;
 use crate::create_user_request_dto::CreateUserRequestDTO;
 use crate::credentials::Credentials;
+use crate::jwt_generator::{generate_jwt, JwtClaims};
 use crate::point::Point;
 use crate::user::User;
 use axum::http::StatusCode;
@@ -48,14 +49,21 @@ impl InMemoryDataHandler {
     let mut local_users = self.users.lock().unwrap();
     let mut found_user = local_users.iter().find(|u| u.email == credentials.email);
     match found_user {
-      None => { (StatusCode::BAD_REQUEST, "User email not found") }
+      None => {
+        (StatusCode::BAD_REQUEST, "User doesnt exist".to_string())
+      }
       Some(_) => {
         // TODO: check with hashing match
         if found_user.unwrap().hashed_password != credentials.plain_password {
-          return (StatusCode::BAD_REQUEST, "Email or password doesn't match");
+          return (StatusCode::BAD_REQUEST, "Email or password doesn't match".to_string());
         }
 
-        (StatusCode::OK, "User logged in! JWT: eySODFJ98ehfauiehfPIHEfhyh")
+        let claims = JwtClaims {
+          user_id: found_user.unwrap().id.to_string(),
+          is_admin: found_user.unwrap().is_admin,
+        };
+        let next_jwt = generate_jwt(claims);
+        (StatusCode::OK, next_jwt)
       }
     }
   }

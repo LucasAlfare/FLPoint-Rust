@@ -4,6 +4,7 @@ mod create_user_request_dto;
 mod data_handler;
 mod point;
 mod create_point_request_dto;
+mod jwt_generator;
 
 use crate::create_point_request_dto::CreatePointRequestDTO;
 use crate::create_user_request_dto::CreateUserRequestDTO;
