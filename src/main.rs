@@ -1,17 +1,3 @@
-// mod jwt_generator;
-//
-// use jwt_generator::generate_jwt;
-// use jwt_generator::JwtClaims;
-//
-// fn main() {
-//   let c = JwtClaims {
-//     user_id: "hehe".to_string(),
-//     is_admin: true,
-//   };
-//
-//   println!("{}", generate_jwt(c));
-// }
-
 mod credentials;
 mod user;
 mod create_user_request_dto;
@@ -60,6 +46,7 @@ async fn register(
 }
 
 // cls; curl -v -X POST http://localhost:3000/login -H "Content-Type: application/json" -d '{ "email": "admin@system.com", "plain_password": "1234567890" }'
+// also: wtf, params should be in this exact order to work?
 async fn login(
   State(handler): State<Arc<InMemoryDataHandler>>,
   Json(credentials): Json<Credentials>,
